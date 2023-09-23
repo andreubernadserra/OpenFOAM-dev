@@ -3,6 +3,11 @@ cd ${0%/*} || exit 1    # Run from this directory
 
 blockMesh &> log.blockMesh
 
-gdb -q -x debug/config --args Test-findSphere &> log.serial
+if [ $(echo $WM_OPTIONS | grep -i "debug") ]
+then
+    gdb -q -x debug/config --args Test-findSphere &> log.serial
+else
+    Test-findSphere &> log.serial
+fi
 
 #------------------------------------------------------------------------------
