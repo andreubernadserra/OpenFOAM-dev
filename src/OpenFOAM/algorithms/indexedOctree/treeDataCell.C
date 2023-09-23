@@ -168,6 +168,28 @@ bool Foam::treeDataCell::overlaps
 }
 
 
+bool Foam::treeDataCell::overlaps
+(
+    const label index,
+    const point& centre,
+    const scalar radiusSqr
+) const
+{
+    if (cacheBb_)
+    {
+        return bbs_[index].overlaps(centre, radiusSqr);
+    }
+    else
+    {
+        return mesh_.cells()[cellLabels_[index]].bb
+        (
+            mesh_.points(),
+            mesh_.faces()
+        ).overlaps(centre, radiusSqr);
+    }
+}
+
+
 bool Foam::treeDataCell::contains
 (
     const label index,

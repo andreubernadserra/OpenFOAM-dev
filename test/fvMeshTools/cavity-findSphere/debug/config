@@ -1,0 +1,11 @@
+break Test-findSphere.C:testFindSphere
+run
+finish
+
+print ""
+print "Cell labels within the sphere"
+print *cellsWithinSphere.v_@cellsWithinSphere.size_
+print ""
+
+continue
+quit
