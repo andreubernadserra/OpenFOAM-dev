@@ -175,17 +175,40 @@ bool Foam::treeDataCell::overlaps
     const scalar radiusSqr
 ) const
 {
+    const label& celli = cellLabels_[index];
+
+    boundBox bb;
     if (cacheBb_)
     {
-        return bbs_[index].overlaps(centre, radiusSqr);
+        bb = bbs_[index];
     }
     else
     {
-        return mesh_.cells()[cellLabels_[index]].bb
+        bb = mesh_.cells()[celli].bb
         (
             mesh_.points(),
             mesh_.faces()
-        ).overlaps(centre, radiusSqr);
+        );
+    }
+
+    if (bb.overlaps(centre, radiusSqr))
+    {
+        const point& cell = mesh_.cellCentres()[celli];
+        const point dir = (cell - centre) / mag(cell - centre);
+        const point proj = centre + sqrt(radiusSqr) * dir; 
+
+        if (bb.containsInside(proj))
+        {
+            return mesh_.pointInCell(proj, celli);
+        }
+        else
+        {
+            return true;
+        }
+    }
+    else
+    {
+        return false;
     }
 }
 
