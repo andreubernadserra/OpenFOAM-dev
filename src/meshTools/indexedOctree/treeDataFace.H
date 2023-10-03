@@ -213,6 +213,14 @@ public:
                 const label index,
                 const treeBoundBox& sampleBb
             ) const;
+
+            //- Does (bb of) shape at index overlap bb
+            bool overlaps
+            (
+                const label index,
+                const point& centre,
+                const scalar radiusSqr
+            ) const;
 };
 
 

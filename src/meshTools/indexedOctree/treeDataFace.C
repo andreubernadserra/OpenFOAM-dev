@@ -490,6 +490,67 @@ bool Foam::treeDataFace::overlaps
 }
 
 
+bool Foam::treeDataFace::overlaps
+(
+    const label index,
+    const point& centre,
+    const scalar radiusSqr
+) const
+{
+    const label& facei = faceLabels_[index];
+
+    boundBox bb;
+    if (cacheBb_)
+    {
+        bb = bbs_[index];
+    }
+    else
+    {
+        bb = calcBb(facei);
+    }
+
+    // 1. Check if there is potential overlapping
+    if (bb.overlaps(centre, radiusSqr))
+    {
+        const pointField& points = mesh_.points();
+        const face& f = mesh_.faces()[facei];
+
+        // 2. Check if one or more face points inside
+        forAll(f.points(points), pointi)
+        {
+            const point& p = points[pointi];
+            const scalar distSqr = magSqr(p - centre);
+            
+            if (distSqr <= radiusSqr)
+            {
+                return true;
+            }
+        }
+
+        // 3. Check if one or more face edges go through the searched sphere.
+        // Copied from treeDataEdge.
+        const edgeList& edges = f.edges();
+        forAll(edges, edgei)
+        {
+            const edge& e = edges[edgei];
+            const pointHit nearHit = e.line(points).nearestDist(centre);
+            const scalar distSqr = sqr(nearHit.distance());
+
+            if (distSqr <= radiusSqr)
+            {
+                return true;
+            }
+        }
+
+        return false; 
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 void Foam::treeDataFace::findNearestOp::operator()
 (
     const labelUList& indices,
