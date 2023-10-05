@@ -193,18 +193,53 @@ bool Foam::treeDataCell::overlaps
 
     if (bb.overlaps(centre, radiusSqr))
     {
-        const point& cell = mesh_.cellCentres()[celli];
-        const point dir = (cell - centre) / mag(cell - centre);
-        const point proj = centre + sqrt(radiusSqr) * dir; 
 
-        if (bb.containsInside(proj))
-        {
-            return mesh_.pointInCell(proj, celli);
-        }
-        else
+        // Cell contains the sphere
+        if (mesh_.pointInCell(centre, celli))
         {
             return true;
         }
+        
+        // Intersection with faces
+        const pointField& points_ = mesh_.points();
+        const cell& c = mesh_.cells()[celli];
+        forAll(c, i)
+        {
+            const face& f = mesh_.faces()[c[i]];
+            const point& fc = f.centre(points_);
+            const point n = f.normal(points_);
+
+            const pointHit intersection = f.intersection(
+                centre, 
+                n,
+                fc,
+                points_,
+                intersection::algorithm::fullRay
+            ); 
+
+            if (intersection.hit())
+            {
+                const scalar d = intersection.distance();
+                if (sqr(d) <= radiusSqr)
+                {
+                    return true;
+                }
+            }
+
+            // Intersection with points
+            forAll(f, j)
+            {
+                const point& v = points_[f[j]];
+                const scalar dSqr = magSqr(v - centre);
+                
+                if (dSqr <= radiusSqr)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
     else
     {

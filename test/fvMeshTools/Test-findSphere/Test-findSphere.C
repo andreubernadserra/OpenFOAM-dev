@@ -28,10 +28,18 @@ int main(int argc, char *argv[])
     #include "createTimeNoFunctionObjects.H"
     #include "createNamedMesh.H"
 
-    const scalar radius = 2.5e-2;
-    const point centre = {5e-2, 5e-2, 5e-3};
-    Info<< "Sphere with radius " << radius << " and centre " << centre << "\n";
-
+    // Different spheres for covering different cases:
+    //   - Cell fully overlapped by the sphere
+    //   - One point overlapped by the sphere
+    //   - One face intersected by the sphere
+    //   - One within a cell not intersecting anything
+    const scalar rBig = 2e-2;
+    const scalar rSmall = 2.5e-3;
+    const point cCell = {5e-2, 5e-2, 5e-3};
+    const point cPoint = {0, 2e-2, 5e-3};
+    const point cFace = {9e-2, 9e-2, 5e-3};
+    const point cNone = {8.3e-2, 1e-2, 5e-3};
+    
 
     Info<< "Testing the treeDataCell class\n";
     volScalarField overlapCells
@@ -49,7 +57,10 @@ int main(int argc, char *argv[])
     );
 
     const indexedOctree<treeDataCell>& cellTree = mesh.cellTree();
-    const labelList cells = cellTree.findSphere(centre, sqr(radius));
+    labelList cells = cellTree.findSphere(cCell, sqr(rBig));
+    cells.append(cellTree.findSphere(cPoint, sqr(rSmall)));
+    cells.append(cellTree.findSphere(cFace, sqr(rSmall)));
+    cells.append(cellTree.findSphere(cNone, sqr(rSmall)));
 
     forAll(cells, i)
     {
@@ -90,7 +101,7 @@ int main(int argc, char *argv[])
         1.0
     );
 
-    const labelList faces = faceTree.findSphere(centre, sqr(radius));
+    labelList faces = faceTree.findSphere(cCell, sqr(rBig));
 
     forAll(faces, i)
     {
